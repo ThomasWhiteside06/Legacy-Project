@@ -1,9 +1,9 @@
 import { Link, Route, Routes } from "react-router-dom";
-import AdminPetList from "./AdminPetList";
-import AdminMessages from "./AdminMessages";
+import AdminPetList from "./AdminPetList.js";
+import AdminMessages from "./AdminMessages.js";
 import "../styles/AdminDashboard.css";
 
-const AdminDashboard = () => {
+const AdminDashboard = (): JSX.Element => {
   return (
     <div className="admin-dashboard">
       <h2>Welcome to Your Dashboard</h2>

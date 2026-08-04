@@ -1,8 +1,7 @@
 import "../styles/Navbar.css";
-import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-const Navbar = () => {
+const Navbar = (): JSX.Element => {
   const navigate = useNavigate();
   const isLoggedIn = !!localStorage.getItem("token");
 

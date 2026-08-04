@@ -2,14 +2,21 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import "../styles/AdminMessages.css";
 
-const AdminMessages = () => {
-  const [messages, setMessages] = useState([]);
+interface Message {
+  _id: string;
+  name: string;
+  email: string;
+  message: string;
+}
+
+const AdminMessages = (): JSX.Element => {
+  const [messages, setMessages] = useState<Message[]>([]);
   const token = localStorage.getItem("token");
 
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const response = await axios.get(
+        const response = await axios.get<Message[]>(
           "http://localhost:3000/dashboard/messages",
           {
             headers: {
@@ -23,7 +30,7 @@ const AdminMessages = () => {
       }
     };
     fetchMessages();
-  }, []);
+  }, [token]);
 
   return (
     <div className="admin-messages">
@@ -31,12 +38,8 @@ const AdminMessages = () => {
       <ul className="messages-list">
         {messages.map((msg) => (
           <li key={msg._id} className="message-item">
-            <p>
-              <strong>From:</strong> {msg.name}
-            </p>
-            <p>
-              <strong>Email:</strong> {msg.email}
-            </p>
+            <p><strong>From:</strong> {msg.name}</p>
+            <p><strong>Email:</strong> {msg.email}</p>
             <p>{msg.message}</p>
           </li>
         ))}

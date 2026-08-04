@@ -1,13 +1,42 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+} from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
-import PetCard from "../components/PetCard";
+import PetCard from "../components/PetCard.js";
 import "../styles/AdminPetList.css";
+import type { Pet } from '../models/Pets.js'
 
-const AdminPetList = () => {
-  const [pets, setPets] = useState([]);
+interface NewPet {
+  name: string;
+  type: string;
+  gender: string;
+  shelterName: string;
+  phone: string;
+  email: string;
+  age: string;
+  location: string;
+  image: string;
+}
+
+interface GeocodeResult {
+  lat: number;
+  lng: number;
+}
+
+interface NominatimResult {
+  lat: string;
+  lon: string;
+}
+
+const AdminPetList = (): JSX.Element => {
+  const [pets, setPets] = useState<Pet[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [newPet, setNewPet] = useState({
+
+  const [newPet, setNewPet] = useState<NewPet>({
     name: "",
     type: "",
     gender: "",
@@ -15,46 +44,59 @@ const AdminPetList = () => {
     phone: "",
     email: "",
     age: "",
-    location: "", // This will hold the city name initially
+    location: "",
     image: "",
   });
-  const [imageFile, setImageFile] = useState(null); // State for the image file
+
+  const [imageFile, setImageFile] = useState<File | null>(null);
+
   const token = localStorage.getItem("token");
   const userRole = localStorage.getItem("role");
 
   useEffect(() => {
     const fetchPets = async () => {
       try {
-        const response = await axios.get(
+        const response = await axios.get<Pet[]>(
           "http://localhost:3000/dashboard/pets",
           {
-            headers: { Authorization: `Bearer ${token}` },
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           }
         );
+
         setPets(response.data);
       } catch (error) {
         console.error("Error fetching pets:", error);
       }
     };
+
     fetchPets();
-  }, []);
+  }, [token]);
 
   const handleAddPetClick = () => {
     setShowAddForm(true);
   };
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setNewPet({ ...newPet, [name]: value });
+
+    setNewPet((prevPet) => ({
+      ...prevPet,
+      [name]: value,
+    }));
   };
 
-  const handleFileChange = (e) => {
-    setImageFile(e.target.files[0]);
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    setImageFile(file);
   };
 
-  const geocodeCity = async (cityName) => {
+  const geocodeCity = async (
+    cityName: string
+  ): Promise<GeocodeResult> => {
     try {
-      const response = await axios.get(
+      const response = await axios.get<NominatimResult[]>(
         "https://nominatim.openstreetmap.org/search",
         {
           params: {
@@ -65,19 +107,27 @@ const AdminPetList = () => {
         }
       );
       if (response.data.length > 0) {
-        const { lat, lon } = response.data[0];
-        return { lat: parseFloat(lat), lng: parseFloat(lon) };
-      } else {
-        throw new Error("No results found");
+        const { lat, lon } = response.data[0]!;
+        return {lat: parseFloat(lat), lng: parseFloat(lon),};
       }
+
+      throw new Error("No results found");
     } catch (error) {
       console.error("Error geocoding location:", error);
-      return { lat: 0, lng: 0 };
+
+      return {
+        lat: 0,
+        lng: 0,
+      };
     }
   };
 
-  const handleAddPetSubmit = async (e) => {
+  const handleAddPetSubmit = async (
+    e: FormEvent<HTMLFormElement>
+  ) => {
     e.preventDefault();
+
+    if (!imageFile) return;
 
     try {
       const formData = new FormData();
@@ -85,26 +135,34 @@ const AdminPetList = () => {
       formData.append("upload_preset", "petAdopt");
 
       const cloudinaryRes = await axios.post(
-        process.env.CLOUDINARY_URL,
+        process.env.CLOUDINARY_URL!,
         formData
       );
 
       const imageUrl = cloudinaryRes.data.secure_url;
 
-      // Geocode the city to get latitude and longitude
       const { lat, lng } = await geocodeCity(newPet.location);
-      const newPetData = { ...newPet, location: { lat, lng }, image: imageUrl };
 
-      const response = await axios.post(
+      const newPetData = {
+        ...newPet,
+        location: { lat, lng },
+        image: imageUrl,
+      };
+
+      const response = await axios.post<Pet>(
         "http://localhost:3000/pets",
         newPetData,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
-      setPets([...pets, response.data]);
+      setPets((prevPets) => [...prevPets, response.data]);
+
       setShowAddForm(false);
+
       setNewPet({
         name: "",
         type: "",
@@ -116,6 +174,7 @@ const AdminPetList = () => {
         location: "",
         image: "",
       });
+
       setImageFile(null);
     } catch (error) {
       console.error("Error uploading pet:", error);
@@ -125,11 +184,16 @@ const AdminPetList = () => {
   return (
     <div className="Adminpet-list-page">
       {userRole === "shelter" && (
-        <button onClick={handleAddPetClick}>New Pet</button>
+        <button onClick={handleAddPetClick}>
+          New Pet
+        </button>
       )}
 
       {showAddForm && (
-        <form onSubmit={handleAddPetSubmit} className="add-pet-form">
+        <form
+          onSubmit={handleAddPetSubmit}
+          className="add-pet-form"
+        >
           <input
             type="text"
             name="name"
@@ -138,6 +202,7 @@ const AdminPetList = () => {
             onChange={handleInputChange}
             required
           />
+
           <input
             type="text"
             name="type"
@@ -146,6 +211,7 @@ const AdminPetList = () => {
             onChange={handleInputChange}
             required
           />
+
           <input
             type="text"
             name="gender"
@@ -154,6 +220,7 @@ const AdminPetList = () => {
             onChange={handleInputChange}
             required
           />
+
           <input
             type="text"
             name="shelterName"
@@ -162,6 +229,7 @@ const AdminPetList = () => {
             onChange={handleInputChange}
             required
           />
+
           <input
             type="text"
             name="phone"
@@ -170,6 +238,7 @@ const AdminPetList = () => {
             onChange={handleInputChange}
             required
           />
+
           <input
             type="text"
             name="email"
@@ -178,6 +247,7 @@ const AdminPetList = () => {
             onChange={handleInputChange}
             required
           />
+
           <input
             type="number"
             name="age"
@@ -186,6 +256,7 @@ const AdminPetList = () => {
             onChange={handleInputChange}
             required
           />
+
           <input
             type="text"
             name="location"
@@ -194,15 +265,23 @@ const AdminPetList = () => {
             onChange={handleInputChange}
             required
           />
-          <input type="file" name="image" onChange={handleFileChange} />
-          <button type="submit">Submit</button>
+
+          <input
+            type="file"
+            name="image"
+            onChange={handleFileChange}
+          />
+
+          <button type="submit">
+            Submit
+          </button>
         </form>
       )}
 
       <div className="pet-list">
         {pets.map((pet) => (
           <div key={pet._id}>
-            <PetCard key={pet._id} pet={pet} />
+            <PetCard pet={pet} />
             <Link to={`/pets/${pet._id}`} />
           </div>
         ))}

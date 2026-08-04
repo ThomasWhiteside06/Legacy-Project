@@ -1,30 +1,41 @@
-import React, { useState } from "react";
+import { useState, type ChangeEvent, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "../styles/LoginPage.css";
 
-const LoginPage = () => {
-  const [formData, setFormData] = useState({ email: "", password: "" });
+interface LoginFormData {
+  email: string;
+  password: string;
+}
+
+interface LoginResponse {
+  token: string;
+  role: string;
+}
+
+const LoginPage = (): JSX.Element => {
+  const [formData, setFormData] = useState<LoginFormData>({
+    email: "",
+    password: "",
+  });
   const navigate = useNavigate();
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [name]: value,
+    }));
   };
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const response = await axios.post(
+      const response = await axios.post<LoginResponse>(
         "http://localhost:3000/auth/login",
         formData
       );
       const { token, role } = response.data;
-
-      // Save token and role to localStorage
       localStorage.setItem("token", token);
       localStorage.setItem("role", role);
-
-      // Redirect based on role
       if (role === "shelter") {
         navigate("/dashboard");
       } else {
@@ -37,9 +48,13 @@ const LoginPage = () => {
 
   return (
     <div className="login-page">
-      <form onSubmit={handleSubmit} className="login-form">
+      <form
+        onSubmit={handleSubmit}
+        className="login-form"
+      >
         <div className="form-group">
           <h1>Login</h1>
+
           <input
             type="email"
             name="email"
@@ -48,6 +63,7 @@ const LoginPage = () => {
             onChange={handleChange}
           />
         </div>
+
         <div className="form-group">
           <input
             type="password"
@@ -57,7 +73,11 @@ const LoginPage = () => {
             onChange={handleChange}
           />
         </div>
-        <button type="submit" className="submit-btn">
+
+        <button
+          type="submit"
+          className="submit-btn"
+        >
           Log In
         </button>
       </form>

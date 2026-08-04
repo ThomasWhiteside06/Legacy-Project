@@ -1,18 +1,24 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "../styles/AdminEditPage.css";
 
-const AdminEditPage = () => {
-  const { id } = useParams(); // Ensure `id` is obtained correctly
-  const [pet, setPet] = useState({
+interface Pet {
+  name: string;
+  age: string;
+  image: string;
+}
+
+const AdminEditPage = (): JSX.Element => {
+  const { id } = useParams<{ id: string }>(); // Ensure `id` is obtained correctly
+  const [pet, setPet] = useState<Pet>({
     name: "",
     age: "",
     image: "",
   });
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
-  const [imageFile, setImageFile] = useState(null); 
+  const [imageFile, setImageFile] = useState<File|null>(null);  
   const userRole = localStorage.getItem("role");
 
   useEffect(() => {
@@ -20,7 +26,7 @@ const AdminEditPage = () => {
 
     const fetchPet = async () => {
       try {
-        const response = await axios.get(`http://localhost:3000/pets/${id}`);
+        const response = await axios.get<Pet>(`http://localhost:3000/pets/${id}`);
         setPet(response.data);
       } catch (error) {
         console.error("Error fetching pet details:", error);
@@ -30,20 +36,22 @@ const AdminEditPage = () => {
     fetchPet();
   }, [id]);
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setPet({ ...pet, [name]: value });
   };
 
-  const handleFileChange = (e) => {
-    setImageFile(e.target.files[0]);
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setImageFile(e.target.files[0]!);
+    }
   };
 
-  const handleEditSubmit = async (e) => {
+  const handleEditSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     try {
-      const updatedPet = { ...pet };
+      const updatedPet: Pet = { ...pet };
 
       if (imageFile) {
         // Upload image file here and get the URL
@@ -52,7 +60,7 @@ const AdminEditPage = () => {
         formData.append("upload_preset", "petAdopt");
 
         const uploadResponse = await axios.post(
-          process.env.CLOUDINARY_URL,
+          process.env.CLOUDINARY_URL!,
           formData
         );
 
