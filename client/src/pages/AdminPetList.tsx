@@ -1,9 +1,4 @@
-import {
-  useEffect,
-  useState,
-  type ChangeEvent,
-  type FormEvent,
-} from "react";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import PetCard from "../components/PetCard.js";
@@ -23,8 +18,8 @@ interface NewPet {
 }
 
 interface GeocodeResult {
-  lat: number;
-  lng: number;
+  lat: number | string;
+  lng: number | string;
 }
 
 interface NominatimResult {

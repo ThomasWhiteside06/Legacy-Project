@@ -157,6 +157,7 @@ const PetDetailPage = (): JSX.Element => {
             <button
               onClick={handleEdit}
               className="edit-button"
+              aria-label="Edit Pet"
             >
               <FaEdit size={24} />
             </button>
@@ -164,6 +165,7 @@ const PetDetailPage = (): JSX.Element => {
             <button
               onClick={handleDelete}
               className="delete-button"
+              aria-label="Delete Pet"
             >
               <MdDelete size={24} />
             </button>
