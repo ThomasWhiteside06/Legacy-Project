@@ -63,5 +63,8 @@ cd petAdopt
 	•	Others: Axios.   
 
 	
-	
-
+# Contributors
+    • Hadil Ben Koura
+    
+    • Thomas Whiteside
+    • Ryan Sheng
